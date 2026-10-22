@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekplanner</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --text:#1d2330; --muted:#6b7280;
+  --accent:#2563eb; --ok:#16a34a; --danger:#dc2626; --border:#e5e7eb; --input:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1115; --card:#181c24; --text:#e8ebf0; --muted:#9aa3b2;
+         --accent:#60a5fa; --ok:#4ade80; --danger:#f87171; --border:#2a303c; --input:#11151c; }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);}
+.wrap{max-width:520px;margin:0 auto;padding:14px 16px 48px}
+h1{font-size:1.25rem;margin:4px 0 4px}
+h3{margin:0 0 8px;font-size:1rem}
+.sync{font-size:.8rem;color:var(--muted);margin-bottom:12px}
+.muted{color:var(--muted);font-size:.9rem}
+.hidden{display:none !important}
+
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;min-height:44px;padding:8px;border:1px solid var(--border);background:var(--card);
+  color:var(--text);border-radius:12px;font-size:1rem;cursor:pointer}
+.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.nav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.nav .label{flex:1;text-align:center;font-weight:600;font-size:.95rem;text-transform:capitalize}
+.btn{min-height:44px;padding:0 14px;border:1px solid var(--border);background:var(--card);
+  color:var(--text);border-radius:12px;font-size:1rem;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--danger)}
+.btn.small{min-height:36px;padding:0 10px;font-size:.9rem}
+.navrow{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
+input,select{font:inherit;color:var(--text);background:var(--input);border:1px solid var(--border);
+  border-radius:10px;min-height:44px;padding:8px 10px;width:100%}
+label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted);margin-bottom:10px}
+.row{display:flex;gap:10px}
+.row > label{flex:1}
+.days{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.days label{flex-direction:row;align-items:center;gap:6px;border:1px solid var(--border);border-radius:10px;
+  padding:0 10px;min-height:44px;color:var(--text);margin:0}
+.days input{width:18px;min-height:18px;padding:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.status{font-size:.9rem;color:var(--ok);min-height:1.2em;margin-top:6px}
+.status.err{color:var(--danger)}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px}
+.card h3{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.link{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;padding:0;cursor:pointer;text-align:left;text-transform:capitalize}
+
+.progress{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.bar{flex:1;height:10px;background:var(--border);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--ok);transition:width .2s}
+.pct{font-weight:700;min-width:44px;text-align:right}
+
+.task{display:flex;gap:12px;align-items:flex-start;padding:10px 2px;border-top:1px solid var(--border);min-height:44px;cursor:pointer}
+.task:first-of-type{border-top:none}
+.task input{width:24px;height:24px;min-height:0;margin-top:1px;accent-color:var(--ok);flex:0 0 auto;cursor:pointer;padding:0}
+.task .body{display:flex;flex-direction:column;gap:2px;min-width:0}
+.task .title{font-size:1rem;overflow-wrap:anywhere}
+.task .meta{font-size:.8rem;color:var(--muted)}
+.task.done .title{text-decoration:line-through;color:var(--muted)}
+
+.item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
+.item:first-child{border-top:none}
+.item .body{min-width:0;display:flex;flex-direction:column;gap:2px}
+.item .meta{font-size:.8rem;color:var(--muted)}
+.item .acts{display:flex;gap:6px;flex:0 0 auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Weekplanner</h1>
+  <div class="sync" id="sync">Verbinden…</div>
+
+  <div class="tabs">
+    <button id="tabDay" class="active">Dag</button>
+    <button id="tabWeek">Week</button>
+    <button id="tabInput">Invoer</button>
+  </div>
+
+  <div id="nav">
+    <div class="nav">
+      <button class="btn" id="prev" aria-label="Terug">‹</button>
+      <div class="label" id="label"></div>
+      <button class="btn" id="next" aria-label="Vooruit">›</button>
+    </div>
+    <div class="navrow">
+      <button class="btn small" id="today">Vandaag</button>
+      <input type="date" id="jump" style="width:auto;min-height:36px">
+      <button class="btn small" id="refresh">↻ Vernieuwen</button>
+    </div>
+  </div>
+
+  <div id="root"></div>
+
+  <div id="invoer" class="hidden">
+    <section class="card">
+      <h3 id="formTitle">Nieuwe taak</h3>
+      <label>Titel <input id="f-title" placeholder="Bijv. Daily stand-up"></label>
+      <div class="row">
+        <label>Tijd <input type="time" id="f-time"></label>
+        <label>Categorie <input id="f-cat" placeholder="Optioneel"></label>
+      </div>
+      <label>Herhaling
+        <select id="f-type">
+          <option value="none">Eenmalig</option>
+          <option value="daily">Dagelijks</option>
+          <option value="weekly">Wekelijks</option>
+          <option value="monthly">Maandelijks</option>
+        </select>
+      </label>
+      <div id="f-none"><label>Datum <input type="date" id="f-date"></label></div>
+      <div id="f-weekly" class="hidden">
+        <span class="muted">Op welke dagen</span>
+        <div class="days">
+          <label><input type="checkbox" value="1">ma</label>
+          <label><input type="checkbox" value="2">di</label>
+          <label><input type="checkbox" value="3">wo</label>
+          <label><input type="checkbox" value="4">do</label>
+          <label><input type="checkbox" value="5">vr</label>
+          <label><input type="checkbox" value="6">za</label>
+          <label><input type="checkbox" value="0">zo</label>
+        </div>
+      </div>
+      <div id="f-monthly" class="hidden"><label>Dag van de maand <input type="number" min="1" max="31" id="f-dom"></label></div>
+      <div class="row">
+        <label>Vanaf (optioneel) <input type="date" id="f-start"></label>
+        <label>Tot en met (optioneel) <input type="date" id="f-end"></label>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="f-save">Opslaan</button>
+        <button class="btn" id="f-cancel">Leegmaken</button>
+      </div>
+      <div class="status" id="f-status"></div>
+    </section>
+
+    <section class="card">
+      <h3>Alle taken <span class="muted" id="count"></span></h3>
+      <div id="f-list"></div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn danger" id="wipe">Wis alle taken</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ---------- Opslag: zelfde Firebase-database als het schoonmaakrooster, eigen pad ---------- */
+const DB = "https://schoonmaakrooster-27c5c-default-rtdb.europe-west1.firebasedatabase.app";
+const BASE = DB + "/weekplanner";
+
+async function dbGet(path){
+  const r = await fetch(`${BASE}/${path}.json`);
+  if (!r.ok) throw new Error("get " + r.status);
+  return r.json();
+}
+async function dbPut(path, body){
+  const r = await fetch(`${BASE}/${path}.json`, {method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+  if (!r.ok) throw new Error("put " + r.status);
+}
+async function dbDelete(path){
+  const r = await fetch(`${BASE}/${path}.json`, {method:"DELETE"});
+  if (!r.ok) throw new Error("delete " + r.status);
+}
+
+const SEED = [
+  { id:"standup",   title:"Daily stand-up",               time:"09:15", category:"Team",         type:"weekly",  days:[1,2,3,4,5] },
+  { id:"1op1-po",   title:"1-op-1 met PO",                time:"10:00", category:"Stakeholders", type:"weekly",  days:[2] },
+  { id:"refine",    title:"Backlog refinement",           time:"11:00", category:"Team",         type:"weekly",  days:[3] },
+  { id:"retro",     title:"Retrospective voorbereiden",   time:"14:00", category:"Team",         type:"weekly",  days:[4], startDate:"2026-10-01" },
+  { id:"reflectie", title:"Dagelijkse reflectie",         type:"daily" },
+  { id:"rapport",   title:"Maandrapportage I Join ART",   category:"Rapportage",              type:"monthly", dayOfMonth:28 },
+  { id:"pi-prep",   title:"Workshop voorbereiden PI planning", time:"13:00", category:"Project", type:"none", date:"2026-10-20" }
+];
+
+let tasks = new Map();   // id -> taak
+let doneSet = new Set(); // "taskId_YYYY-MM-DD"
+let loadedOnce = false;
+
+async function seedIfNeeded(){
+  const seeded = await dbGet("seeded");
+  if (seeded) return;
+  for (const t of SEED){
+    const {id, ...rest} = t;
+    await dbPut(`tasks/${id}`, rest);
+  }
+  await dbPut("seeded", true);
+}
+
+async function loadAll(){
+  setSync("Laden…");
+  try{
+    if (!loadedOnce) await seedIfNeeded();
+    const [t, d] = await Promise.all([dbGet("tasks"), dbGet("done")]);
+    tasks = new Map(Object.entries(t || {}));
+    doneSet = new Set(Object.keys(d || {}));
+    loadedOnce = true;
+    setSync("Bijgewerkt " + new Date().toLocaleTimeString("nl", {hour:"2-digit", minute:"2-digit"}));
+  }catch(e){
+    setSync("Geen verbinding: " + e.message);
+  }
+  render();
+}
+function setSync(text){ document.getElementById("sync").textContent = text; }
+
+/* ---------- Datum-hulpfuncties ---------- */
+function fmt(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function parseDate(ds){
+  const [y,m,d] = ds.split("-").map(Number);
+  return new Date(y, m-1, d);
+}
+function monday(d){
+  const x = new Date(d);
+  x.setDate(x.getDate() - ((x.getDay()+6)%7));
+  return x;
+}
+function isoWeek(d){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+}
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ---------- Taken per dag ---------- */
+const REC_LABEL = { daily:"↻ dagelijks", weekly:"↻ wekelijks", monthly:"↻ maandelijks" };
+const DAY_NAMES = ["zo","ma","di","wo","do","vr","za"];
+
+function occurs(t, ds){
+  if (t.type === "none") return t.date === ds;
+  if (t.startDate && ds < t.startDate) return false;
+  if (t.endDate && ds > t.endDate) return false;
+  const d = parseDate(ds);
+  switch (t.type){
+    case "daily":   return true;
+    case "weekly":  return (t.days || []).includes(d.getDay());
+    case "monthly": return d.getDate() === t.dayOfMonth;
+    default:        return false;
+  }
+}
+function allTasks(){ return [...tasks.entries()].map(([id, t]) => ({ ...t, id })); }
+function tasksFor(ds){
+  return allTasks()
+    .filter(t => occurs(t, ds))
+    .sort((a,b) => (a.time||"99:99").localeCompare(b.time||"99:99") || a.title.localeCompare(b.title));
+}
+function doneKey(id, ds){ return id + "_" + ds; }
+function isDone(id, ds){ return doneSet.has(doneKey(id, ds)); }
+function stats(ds){
+  const list = tasksFor(ds);
+  const d = list.filter(t => isDone(t.id, ds)).length;
+  return { n: list.length, d, pct: list.length ? Math.round(d/list.length*100) : 0 };
+}
+
+/* ---------- Schrijven: per taak/afvinking één kleine PUT of DELETE ---------- */
+async function toggle(id, ds){
+  const key = doneKey(id, ds);
+  // optimistisch bijwerken, daarna opslaan en opnieuw laden
+  if (doneSet.has(key)) doneSet.delete(key); else doneSet.add(key);
+  render();
+  try{
+    if (doneSet.has(key)) await dbPut(`done/${key}`, true);
+    else await dbDelete(`done/${key}`);
+    setSync("Opgeslagen " + new Date().toLocaleTimeString("nl", {hour:"2-digit", minute:"2-digit"}));
+  }catch(e){ setSync("Fout bij opslaan: " + e.message); await loadAll(); }
+}
+
+/* ---------- Presentatie ---------- */
+let cur = new Date();
+let view = "day";
+const root = document.getElementById("root");
+const f = id => document.getElementById(id);
+
+function progressHtml(s){
+  return `<div class="progress">
+    <div class="bar"><span style="width:${s.pct}%"></span></div>
+    <span class="pct">${s.pct}%</span>
+  </div>
+  <div class="muted">${s.d} van ${s.n} gereed</div>`;
+}
+function taskHtml(t, ds){
+  const checked = isDone(t.id, ds);
+  const meta = [t.time, t.category, REC_LABEL[t.type]].filter(Boolean).map(esc).join(" · ");
+  return `<label class="task ${checked ? "done" : ""}">
+    <input type="checkbox" data-id="${esc(t.id)}" data-date="${ds}" ${checked ? "checked" : ""}>
+    <span class="body">
+      <span class="title">${esc(t.title)}</span>
+      ${meta ? `<span class="meta">${meta}</span>` : ""}
+    </span>
+  </label>`;
+}
+function listHtml(ds){
+  const list = tasksFor(ds);
+  if (!list.length) return `<p class="muted">Geen taken.</p>`;
+  return list.map(t => taskHtml(t, ds)).join("");
+}
+function weekLabel(d){ return `week ${isoWeek(d)}`; }
+
+function renderDay(){
+  const ds = fmt(cur);
+  f("label").textContent = `${cur.toLocaleDateString("nl-NL",{weekday:"long", day:"numeric", month:"long", year:"numeric"})} · ${weekLabel(cur)}`;
+  return `<section class="card">${progressHtml(stats(ds))}${listHtml(ds)}</section>`;
+}
+function renderWeek(){
+  const start = monday(cur);
+  const end = new Date(start); end.setDate(start.getDate()+6);
+  f("label").textContent = `${weekLabel(cur)} · ${start.toLocaleDateString("nl-NL",{day:"numeric",month:"short"})} – ${end.toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"})}`;
+  let n = 0, d = 0, days = "";
+  for (let i=0; i<7; i++){
+    const day = new Date(start); day.setDate(start.getDate()+i);
+    const ds = fmt(day);
+    const s = stats(ds);
+    n += s.n; d += s.d;
+    const name = day.toLocaleDateString("nl-NL", {weekday:"long", day:"numeric", month:"short"});
+    days += `<section class="card">
+      <h3><button class="link" data-goto="${ds}">${name}</button><span class="pct">${s.pct}%</span></h3>
+      ${progressHtml(s)}
+      ${listHtml(ds)}
+    </section>`;
+  }
+  const wpct = n ? Math.round(d/n*100) : 0;
+  return `<section class="card"><h3>Week totaal</h3>${progressHtml({n,d,pct:wpct})}</section>` + days;
+}
+
+/* ---------- Invoer ---------- */
+let editingId = null;
+
+function describe(t){
+  const range = [t.startDate && `vanaf ${t.startDate}`, t.endDate && `t/m ${t.endDate}`].filter(Boolean).join(", ");
+  let s;
+  if (t.type === "none") s = `eenmalig op ${t.date}`;
+  else if (t.type === "daily") s = "dagelijks";
+  else if (t.type === "weekly") s = "wekelijks: " + (t.days||[]).map(d => DAY_NAMES[d]).join(", ");
+  else s = `maandelijks op de ${t.dayOfMonth}e`;
+  return [s, t.time, t.category, range].filter(Boolean).join(" · ");
+}
+function renderList(){
+  const list = allTasks();
+  f("count").textContent = `(${list.length})`;
+  const sorted = list.sort((a,b) => a.title.localeCompare(b.title));
+  f("f-list").innerHTML = sorted.length ? sorted.map(t => `
+    <div class="item">
+      <div class="body">
+        <span>${esc(t.title)}</span>
+        <span class="meta">${esc(describe(t))}</span>
+      </div>
+      <div class="acts">
+        <button class="btn small" data-edit="${esc(t.id)}">Bewerk</button>
+        <button class="btn small danger" data-del="${esc(t.id)}">Verwijder</button>
+      </div>
+    </div>`).join("") : `<p class="muted">Nog geen taken.</p>`;
+}
+function syncType(){
+  const type = f("f-type").value;
+  f("f-none").classList.toggle("hidden", type !== "none");
+  f("f-weekly").classList.toggle("hidden", type !== "weekly");
+  f("f-monthly").classList.toggle("hidden", type !== "monthly");
+}
+function setStatus(msg, isErr){
+  const el = f("f-status");
+  el.textContent = msg;
+  el.classList.toggle("err", !!isErr);
+}
+function resetForm(){
+  editingId = null;
+  f("formTitle").textContent = "Nieuwe taak";
+  f("f-save").textContent = "Opslaan";
+  f("f-title").value = "";
+  f("f-time").value = "";
+  f("f-cat").value = "";
+  f("f-type").value = "none";
+  f("f-date").value = fmt(new Date());
+  f("f-start").value = "";
+  f("f-end").value = "";
+  f("f-dom").value = "";
+  document.querySelectorAll("#f-weekly input").forEach(c => c.checked = false);
+  syncType();
+}
+async function saveForm(){
+  const title = f("f-title").value.trim();
+  if (!title) return setStatus("Vul een titel in.", true);
+  const type = f("f-type").value;
+  const t = {
+    title, type,
+    time: f("f-time").value,
+    category: f("f-cat").value.trim(),
+    startDate: f("f-start").value,
+    endDate: f("f-end").value
+  };
+  if (type === "none"){
+    if (!f("f-date").value) return setStatus("Kies een datum.", true);
+    t.date = f("f-date").value;
+  }
+  if (type === "weekly"){
+    t.days = [...document.querySelectorAll("#f-weekly input:checked")].map(c => Number(c.value));
+    if (!t.days.length) return setStatus("Kies minstens één dag.", true);
+  }
+  if (type === "monthly"){
+    const n = Number(f("f-dom").value);
+    if (!(n >= 1 && n <= 31)) return setStatus("Vul een dag tussen 1 en 31 in.", true);
+    t.dayOfMonth = n;
+  }
+  if (t.startDate && t.endDate && t.endDate < t.startDate)
+    return setStatus("Einddatum ligt voor de startdatum.", true);
+
+  const id = editingId || (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+  try{
+    await dbPut(`tasks/${id}`, t);
+    resetForm();
+    setStatus("Opgeslagen. Iedereen ziet dit bij het vernieuwen.");
+    await loadAll();
+  }catch(e){ setStatus("Opslaan mislukt: " + e.message, true); }
+}
+function editTask(id){
+  const t = tasks.get(id);
+  if (!t) return;
+  editingId = id;
+  f("formTitle").textContent = "Taak bewerken";
+  f("f-save").textContent = "Wijzigen";
+  f("f-title").value = t.title;
+  f("f-time").value = t.time || "";
+  f("f-cat").value = t.category || "";
+  f("f-type").value = t.type;
+  f("f-date").value = t.date || fmt(new Date());
+  f("f-start").value = t.startDate || "";
+  f("f-end").value = t.endDate || "";
+  f("f-dom").value = t.dayOfMonth || "";
+  document.querySelectorAll("#f-weekly input").forEach(c => c.checked = (t.days||[]).includes(Number(c.value)));
+  syncType();
+  setStatus("");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+async function deleteTask(id){
+  try{
+    await dbDelete(`tasks/${id}`);
+    if (editingId === id) resetForm();
+    await loadAll();
+  }catch(e){ setStatus("Verwijderen mislukt: " + e.message, true); }
+}
+
+/* ---------- Weergave ---------- */
+function render(){
+  const isInput = view === "input";
+  root.classList.toggle("hidden", isInput);
+  f("invoer").classList.toggle("hidden", !isInput);
+  f("nav").classList.toggle("hidden", isInput);
+  if (isInput){
+    renderList();
+  } else {
+    root.innerHTML = view === "day" ? renderDay() : renderWeek();
+    f("jump").value = fmt(cur);
+  }
+  f("tabDay").classList.toggle("active", view === "day");
+  f("tabWeek").classList.toggle("active", view === "week");
+  f("tabInput").classList.toggle("active", view === "input");
+}
+function step(dir){
+  cur.setDate(cur.getDate() + dir * (view === "week" ? 7 : 1));
+  render();
+}
+
+/* ---------- Events ---------- */
+root.addEventListener("change", e => {
+  const cb = e.target;
+  if (cb.matches("input[data-id]")) toggle(cb.dataset.id, cb.dataset.date);
+});
+root.addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]");
+  if (g){ cur = parseDate(g.dataset.goto); view = "day"; render(); }
+});
+f("invoer").addEventListener("click", e => {
+  const ed = e.target.closest("[data-edit]");
+  const del = e.target.closest("[data-del]");
+  if (ed) editTask(ed.dataset.edit);
+  if (del) deleteTask(del.dataset.del);
+});
+
+f("prev").onclick = () => step(-1);
+f("next").onclick = () => step(1);
+f("today").onclick = () => { cur = new Date(); render(); };
+f("refresh").onclick = () => loadAll();
+f("jump").addEventListener("change", e => {
+  if (e.target.value){ cur = parseDate(e.target.value); render(); }
+});
+f("tabDay").onclick   = () => { view = "day";   render(); };
+f("tabWeek").onclick  = () => { view = "week";  render(); };
+f("tabInput").onclick = () => { view = "input"; render(); };
+
+let wipeArmed = false;
+f("wipe").onclick = async () => {
+  if (!wipeArmed){
+    wipeArmed = true;
+    f("wipe").textContent = "Klik nogmaals om alles te wissen";
+    setTimeout(() => { wipeArmed = false; f("wipe").textContent = "Wis alle taken"; }, 4000);
+    return;
+  }
+  wipeArmed = false;
+  f("wipe").textContent = "Wis alle taken";
+  try{
+    await dbDelete("tasks");
+    await dbDelete("done");
+    resetForm();
+    setStatus("Alle taken gewist.");
+    await loadAll();
+  }catch(e){ setStatus("Wissen mislukt: " + e.message, true); }
+};
+
+f("f-type").addEventListener("change", syncType);
+f("f-save").onclick = saveForm;
+f("f-cancel").onclick = () => { resetForm(); setStatus(""); };
+
+resetForm();
+render();
+loadAll();
+setInterval(() => { if (!document.hidden) loadAll(); }, 30000);
+</script>
+</body>
+</html>

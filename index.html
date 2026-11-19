@@ -34,7 +34,7 @@ h3{margin:0 0 8px;font-size:1rem}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn.danger{color:var(--danger)}
 .btn.small{min-height:36px;padding:0 10px;font-size:.9rem}
-.navrow{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
+.navrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
 input,select{font:inherit;color:var(--text);background:var(--input);border:1px solid var(--border);
   border-radius:10px;min-height:44px;padding:8px 10px;width:100%}
 label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted);margin-bottom:10px}
@@ -70,6 +70,16 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--mut
 .item .body{min-width:0;display:flex;flex-direction:column;gap:2px}
 .item .meta{font-size:.8rem;color:var(--muted)}
 .item .acts{display:flex;gap:6px;flex:0 0 auto}
+
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{font-size:.7rem;color:var(--muted);text-align:center;padding-bottom:2px}
+.cday{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;min-width:0;padding:4px 2px;
+  border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+.cday.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.cday .num{font-size:.85rem;font-weight:600}
+.cday .bar2{width:100%;height:4px;border-radius:99px;background:var(--border);overflow:hidden}
+.cday .bar2 span{display:block;height:100%;background:var(--ok)}
+.cday .cnt{font-size:.62rem;color:var(--muted);min-height:.8rem}
 </style>
 </head>
 <body>
@@ -80,6 +90,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--mut
   <div class="tabs">
     <button id="tabDay" class="active">Dag</button>
     <button id="tabWeek">Week</button>
+    <button id="tabMonth">Maand</button>
     <button id="tabInput">Invoer</button>
   </div>
 
@@ -92,6 +103,15 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--mut
     <div class="navrow">
       <button class="btn small" id="today">Vandaag</button>
       <input type="date" id="jump" style="width:auto;min-height:36px">
+      <span id="monthTools" class="hidden" style="display:flex;gap:6px;align-items:center">
+        <input type="month" id="jumpMonth" style="width:auto;min-height:36px">
+        <select id="monthCount" style="width:auto;min-height:36px">
+          <option value="1">1 maand</option>
+          <option value="3">3 maanden</option>
+          <option value="6">6 maanden</option>
+          <option value="12">12 maanden</option>
+        </select>
+      </span>
       <button class="btn small" id="refresh">↻ Vernieuwen</button>
     </div>
   </div>
@@ -332,6 +352,45 @@ function renderWeek(){
   return `<section class="card"><h3>Week totaal</h3>${progressHtml({n,d,pct:wpct})}</section>` + days;
 }
 
+/* ---------- Maandoverzicht (één of meerdere maanden onder elkaar) ---------- */
+function renderMonth(){
+  const count = Number(f("monthCount").value) || 1;
+  const todayDs = fmt(new Date());
+  const first = new Date(cur.getFullYear(), cur.getMonth(), 1);
+  const lastM = new Date(cur.getFullYear(), cur.getMonth() + count - 1, 1);
+  f("label").textContent = count === 1
+    ? first.toLocaleDateString("nl-NL", {month:"long", year:"numeric"})
+    : `${first.toLocaleDateString("nl-NL", {month:"short", year:"numeric"})} – ${lastM.toLocaleDateString("nl-NL", {month:"short", year:"numeric"})}`;
+
+  const dows = ["ma","di","wo","do","vr","za","zo"].map(d => `<div class="dow">${d}</div>`).join("");
+  let html = "";
+  for (let m = 0; m < count; m++){
+    const mStart = new Date(first.getFullYear(), first.getMonth() + m, 1);
+    const daysInMonth = new Date(mStart.getFullYear(), mStart.getMonth() + 1, 0).getDate();
+    const offset = (mStart.getDay() + 6) % 7;
+    let n = 0, d = 0, cells = "";
+    for (let i = 0; i < offset; i++) cells += `<div></div>`;
+    for (let day = 1; day <= daysInMonth; day++){
+      const ds = fmt(new Date(mStart.getFullYear(), mStart.getMonth(), day));
+      const s = stats(ds);
+      n += s.n; d += s.d;
+      cells += `<button class="cday${ds === todayDs ? " today" : ""}" data-goto="${ds}" aria-label="${ds}">
+        <span class="num">${day}</span>
+        <span class="bar2">${s.n ? `<span style="width:${s.pct}%"></span>` : ""}</span>
+        <span class="cnt">${s.n ? `${s.d}/${s.n}` : ""}</span>
+      </button>`;
+    }
+    const pct = n ? Math.round(d / n * 100) : 0;
+    const title = mStart.toLocaleDateString("nl-NL", {month:"long", year:"numeric"});
+    html += `<section class="card">
+      <h3><span style="text-transform:capitalize">${title}</span><span class="pct">${pct}%</span></h3>
+      <div class="muted" style="margin-bottom:8px">${d} van ${n} gereed</div>
+      <div class="cal">${dows}${cells}</div>
+    </section>`;
+  }
+  return html;
+}
+
 /* ---------- Invoer ---------- */
 let editingId = null;
 
@@ -371,19 +430,42 @@ function setStatus(msg, isErr){
   el.textContent = msg;
   el.classList.toggle("err", !!isErr);
 }
+/* Laatst gebruikte velden onthouden (per apparaat), behalve de titel */
+const KEY_LAST = "weekplanner-last-form";
+function readLast(){
+  try{ return JSON.parse(localStorage.getItem(KEY_LAST) || "null"); }catch(e){ return null; }
+}
+function writeLast(v){
+  try{ localStorage.setItem(KEY_LAST, JSON.stringify(v)); }catch(e){}
+}
+function formValues(){
+  return {
+    time: f("f-time").value,
+    cat: f("f-cat").value,
+    type: f("f-type").value,
+    date: f("f-date").value,
+    days: [...document.querySelectorAll("#f-weekly input:checked")].map(c => Number(c.value)),
+    dom: f("f-dom").value,
+    start: f("f-start").value,
+    end: f("f-end").value
+  };
+}
+function applyValues(v){
+  f("f-time").value = v.time || "";
+  f("f-cat").value = v.cat || "";
+  f("f-type").value = v.type || "none";
+  f("f-date").value = v.date || fmt(new Date());
+  f("f-dom").value = v.dom || "";
+  f("f-start").value = v.start || "";
+  f("f-end").value = v.end || "";
+  document.querySelectorAll("#f-weekly input").forEach(c => c.checked = (v.days || []).includes(Number(c.value)));
+}
 function resetForm(){
   editingId = null;
   f("formTitle").textContent = "Nieuwe taak";
   f("f-save").textContent = "Opslaan";
   f("f-title").value = "";
-  f("f-time").value = "";
-  f("f-cat").value = "";
-  f("f-type").value = "none";
-  f("f-date").value = fmt(new Date());
-  f("f-start").value = "";
-  f("f-end").value = "";
-  f("f-dom").value = "";
-  document.querySelectorAll("#f-weekly input").forEach(c => c.checked = false);
+  applyValues(readLast() || {});
   syncType();
 }
 async function saveForm(){
@@ -416,6 +498,7 @@ async function saveForm(){
   const id = editingId || (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
   try{
     await dbPut(`tasks/${id}`, t);
+    writeLast(formValues());
     resetForm();
     setStatus("Opgeslagen. Iedereen ziet dit bij het vernieuwen.");
     await loadAll();
@@ -451,21 +534,33 @@ async function deleteTask(id){
 /* ---------- Weergave ---------- */
 function render(){
   const isInput = view === "input";
+  const isMonth = view === "month";
   root.classList.toggle("hidden", isInput);
   f("invoer").classList.toggle("hidden", !isInput);
   f("nav").classList.toggle("hidden", isInput);
+  f("jump").classList.toggle("hidden", isMonth);
+  f("monthTools").classList.toggle("hidden", !isMonth);
   if (isInput){
     renderList();
+  } else if (isMonth){
+    root.innerHTML = renderMonth();
+    f("jumpMonth").value = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,"0")}`;
   } else {
     root.innerHTML = view === "day" ? renderDay() : renderWeek();
     f("jump").value = fmt(cur);
   }
   f("tabDay").classList.toggle("active", view === "day");
   f("tabWeek").classList.toggle("active", view === "week");
-  f("tabInput").classList.toggle("active", view === "input");
+  f("tabMonth").classList.toggle("active", isMonth);
+  f("tabInput").classList.toggle("active", isInput);
 }
 function step(dir){
-  cur.setDate(cur.getDate() + dir * (view === "week" ? 7 : 1));
+  if (view === "month"){
+    const n = Number(f("monthCount").value) || 1;
+    cur = new Date(cur.getFullYear(), cur.getMonth() + dir * n, 1);
+  } else {
+    cur.setDate(cur.getDate() + dir * (view === "week" ? 7 : 1));
+  }
   render();
 }
 
@@ -495,6 +590,15 @@ f("jump").addEventListener("change", e => {
 f("tabDay").onclick   = () => { view = "day";   render(); };
 f("tabWeek").onclick  = () => { view = "week";  render(); };
 f("tabInput").onclick = () => { view = "input"; render(); };
+f("tabMonth").onclick = () => { view = "month"; render(); };
+f("jumpMonth").addEventListener("change", e => {
+  if (e.target.value){
+    const [y, m] = e.target.value.split("-").map(Number);
+    cur = new Date(y, m - 1, 1);
+    render();
+  }
+});
+f("monthCount").addEventListener("change", render);
 
 let wipeArmed = false;
 f("wipe").onclick = async () => {

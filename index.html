@@ -2,129 +2,213 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
 <title>Weekplanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f5f6f8; --card:#ffffff; --text:#1d2330; --muted:#6b7280;
-  --accent:#2563eb; --ok:#16a34a; --danger:#dc2626; --border:#e5e7eb; --input:#ffffff;
+  --bg:#f5f4ef; --card:#ffffff; --ink:#1a2230; --muted:#687080; --line:#e6e4dc;
+  --accent:#0f766e; --accent-ink:#ffffff; --accent-soft:#e2f3f0; --ok:#15803d; --danger:#b42318;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#0f1115; --card:#181c24; --text:#e8ebf0; --muted:#9aa3b2;
-         --accent:#60a5fa; --ok:#4ade80; --danger:#f87171; --border:#2a303c; --input:#11151c; }
+  :root:not([data-theme="light"]){
+    --bg:#0d1014; --card:#161a21; --ink:#e8ecf2; --muted:#9aa4b2; --line:#262c36;
+    --accent:#2dd4bf; --accent-ink:#052b26; --accent-soft:#12302c; --ok:#4ade80; --danger:#f87171;
+    color-scheme:dark;
+  }
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);}
-.wrap{max-width:520px;margin:0 auto;padding:14px 16px 48px}
-h1{font-size:1.25rem;margin:4px 0 4px}
-h3{margin:0 0 8px;font-size:1rem}
-.sync{font-size:.8rem;color:var(--muted);margin-bottom:12px}
-.muted{color:var(--muted);font-size:.9rem}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,select{font:inherit}
+.app{max-width:560px;margin:0 auto;padding-block:max(18px,env(safe-area-inset-top,0px)) 120px;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.muted{color:var(--muted);font-size:.9rem;margin:4px 0 0}
 .hidden{display:none !important}
 
-.tabs{display:flex;gap:8px;margin-bottom:12px}
-.tabs button{flex:1;min-height:44px;padding:8px;border:1px solid var(--border);background:var(--card);
-  color:var(--text);border-radius:12px;font-size:1rem;cursor:pointer}
-.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.eyebrow{margin:0;color:var(--muted);font-size:.85rem;font-weight:600}
+h1{margin:2px 0 0;font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+.sync{font-size:.75rem;color:var(--muted);margin-top:4px;min-height:1em}
+.hdr-ring{flex:0 0 auto;cursor:pointer}
+.hdr-side{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 
-.nav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.nav .label{flex:1;text-align:center;font-weight:600;font-size:.95rem;text-transform:capitalize}
-.btn{min-height:44px;padding:0 14px;border:1px solid var(--border);background:var(--card);
-  color:var(--text);border-radius:12px;font-size:1rem;cursor:pointer}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+/* segmented tabs */
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--card);border:1px solid var(--line);padding:4px;border-radius:16px;margin:16px 0}
+.seg button{min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-weight:700;cursor:pointer;font-size:.95rem}
+.seg button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.toolbar .title{flex:1;text-align:center;font-weight:700;text-transform:capitalize;min-width:0;font-size:.98rem}
+.toolrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:16px}
+.toolrow .monthtools{display:flex;gap:8px;align-items:center}
+input,select{color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:44px;padding:8px 12px}
+input[type="date"],input[type="month"],select{width:auto}
+
+/* buttons */
+.btn{min-height:44px;padding:0 16px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;cursor:pointer;white-space:nowrap}
+.btn.round{width:44px;padding:0;font-size:1.4rem;line-height:1}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--accent)}
 .btn.danger{color:var(--danger)}
-.btn.small{min-height:36px;padding:0 10px;font-size:.9rem}
-.navrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
-input,select{font:inherit;color:var(--text);background:var(--input);border:1px solid var(--border);
-  border-radius:10px;min-height:44px;padding:8px 10px;width:100%}
-label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted);margin-bottom:10px}
-.row{display:flex;gap:10px}
-.row > label{flex:1}
-.days{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.days label{flex-direction:row;align-items:center;gap:6px;border:1px solid var(--border);border-radius:10px;
-  padding:0 10px;min-height:44px;color:var(--text);margin:0}
-.days input{width:18px;min-height:18px;padding:0}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.status{font-size:.9rem;color:var(--ok);min-height:1.2em;margin-top:6px}
-.status.err{color:var(--danger)}
+.btn.small{min-height:36px;padding:0 12px;font-size:.88rem;border-radius:12px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px}
-.card h3{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.link{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;padding:0;cursor:pointer;text-align:left;text-transform:capitalize}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.hero .big{font-size:2.3rem;font-weight:800;margin:6px 0 0;line-height:1;letter-spacing:-.02em}
+.hero .big small{font-size:1rem;color:var(--muted);font-weight:600;letter-spacing:0}
+.ring-bg{stroke:var(--line)}
+.ring-fg{stroke:var(--accent);transition:stroke-dashoffset .5s ease}
+.ring-txt{fill:var(--ink);font-weight:800}
 
-.progress{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.bar{flex:1;height:10px;background:var(--border);border-radius:99px;overflow:hidden}
-.bar span{display:block;height:100%;background:var(--ok);transition:width .2s}
-.pct{font-weight:700;min-width:44px;text-align:right}
+/* task lists */
+.grp{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:20px 4px 8px;font-weight:700}
+.tasks{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.row{display:flex;gap:12px;align-items:center;padding:4px 6px 4px 6px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.check{width:32px;height:32px;flex:0 0 32px;border-radius:50%;border:2px solid var(--muted);background:transparent;color:var(--accent-ink);font-weight:800;cursor:pointer;display:grid;place-items:center;padding:0;font-size:.95rem}
+.is-done .check{background:var(--ok);border-color:var(--ok);color:#fff}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:12px 6px;background:none;border:0;text-align:left;color:var(--ink);cursor:pointer;border-radius:12px}
+.row-title{font-weight:700;overflow-wrap:anywhere}
+.row-meta{font-size:.8rem;color:var(--muted)}
+.is-done .row-title{text-decoration:line-through;color:var(--muted);font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:28px 16px;border:1.5px dashed var(--line);border-radius:20px;display:flex;flex-direction:column;align-items:center;gap:12px}
 
-.task{display:flex;gap:12px;align-items:flex-start;padding:10px 2px;border-top:1px solid var(--border);min-height:44px;cursor:pointer}
-.task:first-of-type{border-top:none}
-.task input{width:24px;height:24px;min-height:0;margin-top:1px;accent-color:var(--ok);flex:0 0 auto;cursor:pointer;padding:0}
-.task .body{display:flex;flex-direction:column;gap:2px;min-width:0}
-.task .title{font-size:1rem;overflow-wrap:anywhere}
-.task .meta{font-size:.8rem;color:var(--muted)}
-.task.done .title{text-decoration:line-through;color:var(--muted)}
+/* week strip */
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:14px}
+.wday{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 0 8px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-width:0}
+.wday .wd{font-size:.7rem;color:var(--muted);text-transform:uppercase;font-weight:700}
+.wday .wn{font-size:1.1rem;font-weight:800}
+.wday.today .wn{color:var(--accent)}
+.wday.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.wday.sel .wd,.wday.sel .wn{color:var(--accent-ink)}
 
-.item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
-.item:first-child{border-top:none}
+/* bars */
+.bar2{width:100%;height:5px;border-radius:99px;background:var(--line);overflow:hidden;display:block}
+.bar2 span{display:block;height:100%;background:var(--ok);border-radius:99px}
+.wday.sel .bar2{background:rgba(255,255,255,.35)}
+.wday.sel .bar2 span{background:var(--accent-ink)}
+
+/* month calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.dow{font-size:.7rem;color:var(--muted);text-align:center;padding-bottom:2px;font-weight:700;text-transform:uppercase}
+.cday{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:58px;min-width:0;padding:7px 3px 6px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer}
+.cday .num{font-size:.9rem;font-weight:700}
+.cday .cnt{font-size:.65rem;color:var(--muted);min-height:.8rem}
+.cday.today .num{color:var(--accent)}
+.cday.today{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.cday.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.cday.sel .num,.cday.sel .cnt{color:var(--accent-ink)}
+.cday.sel .bar2{background:rgba(255,255,255,.35)}
+.cday.sel .bar2 span{background:var(--accent-ink)}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.mhead h3{margin:0;font-size:1.05rem;text-transform:capitalize;font-weight:800}
+.mhead .pct{font-weight:800;color:var(--accent)}
+.sel-h{font-size:1rem;font-weight:800;text-transform:capitalize;margin:22px 4px 0}
+
+/* tasks tab */
+.search{width:100%;margin-bottom:12px}
+.item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
 .item .body{min-width:0;display:flex;flex-direction:column;gap:2px}
 .item .meta{font-size:.8rem;color:var(--muted)}
 .item .acts{display:flex;gap:6px;flex:0 0 auto}
 
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.dow{font-size:.7rem;color:var(--muted);text-align:center;padding-bottom:2px}
-.cday{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;min-width:0;padding:4px 2px;
-  border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
-.cday.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.cday .num{font-size:.85rem;font-weight:600}
-.cday .bar2{width:100%;height:4px;border-radius:99px;background:var(--border);overflow:hidden}
-.cday .bar2 span{display:block;height:100%;background:var(--ok)}
-.cday .cnt{font-size:.62rem;color:var(--muted);min-height:.8rem}
+/* floating add button */
+.fab{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:max(18px,env(safe-area-inset-bottom,0px));width:62px;height:62px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:2rem;font-weight:500;line-height:1;cursor:pointer;box-shadow:0 10px 24px rgba(15,118,110,.35);display:grid;place-items:center;z-index:5}
+
+/* sheet (bottom sheet on phone, centred on wide screens) */
+dialog{border:0;border-radius:24px 24px 0 0;padding:0;margin:auto auto 0;width:min(560px,100%);max-width:100%;background:var(--card);color:var(--ink);max-height:92vh}
+dialog::backdrop{background:rgba(10,14,20,.5)}
+dialog[open]{animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (min-width:640px){dialog{margin:auto;border-radius:24px}}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 4px;gap:10px}
+.sheet-head h2{margin:0;font-size:1.2rem;font-weight:800}
+.sheet-body{padding:12px 20px 22px;overflow:auto;max-height:calc(92vh - 60px)}
+.sheet-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);font-weight:600;margin-bottom:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.days{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:999px;color:var(--ink);font-weight:700;font-size:.92rem;cursor:pointer;background:var(--card)}
+.chip input{width:18px;height:18px;min-height:0;margin:0;accent-color:var(--accent)}
+.chip:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.status{font-size:.88rem;color:var(--ok);min-height:1.2em;margin-top:4px}
+.status.err{color:var(--danger)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:700;font-size:.92rem;opacity:0;pointer-events:none;transition:.25s;z-index:10;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--danger);color:#fff}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Weekplanner</h1>
-  <div class="sync" id="sync">Verbinden…</div>
+<div class="app">
+  <header class="top">
+    <div style="min-width:0">
+      <p class="eyebrow" id="eyebrow"></p>
+      <h1>Weekplanner</h1>
+      <div class="sync" id="sync">Verbinden…</div>
+    </div>
+    <div class="hdr-side">
+      <div class="hdr-ring" id="hdrRing"></div>
+      <button class="btn round small" id="refresh" aria-label="Vernieuwen">↻</button>
+    </div>
+  </header>
 
-  <div class="tabs">
-    <button id="tabDay" class="active">Dag</button>
-    <button id="tabWeek">Week</button>
-    <button id="tabMonth">Maand</button>
-    <button id="tabInput">Invoer</button>
-  </div>
+  <nav class="seg" role="tablist" aria-label="Weergave">
+    <button role="tab" id="tabDay" aria-selected="true">Dag</button>
+    <button role="tab" id="tabWeek" aria-selected="false">Week</button>
+    <button role="tab" id="tabMonth" aria-selected="false">Maand</button>
+    <button role="tab" id="tabTasks" aria-selected="false">Taken</button>
+  </nav>
 
   <div id="nav">
-    <div class="nav">
-      <button class="btn" id="prev" aria-label="Terug">‹</button>
-      <div class="label" id="label"></div>
-      <button class="btn" id="next" aria-label="Vooruit">›</button>
+    <div class="toolbar">
+      <button class="btn round" id="prev" aria-label="Terug">‹</button>
+      <div class="title" id="label"></div>
+      <button class="btn round" id="next" aria-label="Vooruit">›</button>
     </div>
-    <div class="navrow">
+    <div class="toolrow">
       <button class="btn small" id="today">Vandaag</button>
-      <input type="date" id="jump" style="width:auto;min-height:36px">
-      <span id="monthTools" class="hidden" style="display:flex;gap:6px;align-items:center">
-        <input type="month" id="jumpMonth" style="width:auto;min-height:36px">
-        <select id="monthCount" style="width:auto;min-height:36px">
+      <input type="date" id="jump" aria-label="Ga naar datum">
+      <span id="monthTools" class="monthtools hidden">
+        <input type="month" id="jumpMonth" aria-label="Ga naar maand">
+        <select id="monthCount" aria-label="Aantal maanden">
           <option value="1">1 maand</option>
           <option value="3">3 maanden</option>
           <option value="6">6 maanden</option>
           <option value="12">12 maanden</option>
         </select>
       </span>
-      <button class="btn small" id="refresh">↻ Vernieuwen</button>
     </div>
   </div>
 
-  <div id="root"></div>
+  <main id="root" aria-live="polite"></main>
+</div>
 
-  <div id="invoer" class="hidden">
-    <section class="card">
-      <h3 id="formTitle">Nieuwe taak</h3>
-      <label>Titel <input id="f-title" placeholder="Bijv. Daily stand-up"></label>
-      <div class="row">
+<button class="fab" id="fab" aria-label="Nieuwe taak">+</button>
+
+<dialog id="sheet" aria-labelledby="sheetTitle">
+  <form id="taskForm" method="dialog" novalidate>
+    <div class="sheet-head">
+      <h2 id="sheetTitle">Nieuwe taak</h2>
+      <button class="btn small ghost" type="button" id="sheetClose" aria-label="Sluiten">Sluiten</button>
+    </div>
+    <div class="sheet-body">
+      <label>Titel
+        <input id="f-title" placeholder="Bijv. Daily stand-up" autocomplete="off">
+      </label>
+      <div class="row2">
         <label>Tijd <input type="time" id="f-time"></label>
-        <label>Categorie <input id="f-cat" placeholder="Optioneel"></label>
+        <label>Categorie <input id="f-cat" placeholder="Optioneel" autocomplete="off"></label>
       </div>
       <label>Herhaling
         <select id="f-type">
@@ -136,41 +220,36 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--mut
       </label>
       <div id="f-none"><label>Datum <input type="date" id="f-date"></label></div>
       <div id="f-weekly" class="hidden">
-        <span class="muted">Op welke dagen</span>
+        <span class="muted" style="display:block;margin-bottom:8px;font-weight:600">Op welke dagen</span>
         <div class="days">
-          <label><input type="checkbox" value="1">ma</label>
-          <label><input type="checkbox" value="2">di</label>
-          <label><input type="checkbox" value="3">wo</label>
-          <label><input type="checkbox" value="4">do</label>
-          <label><input type="checkbox" value="5">vr</label>
-          <label><input type="checkbox" value="6">za</label>
-          <label><input type="checkbox" value="0">zo</label>
+          <label class="chip"><input type="checkbox" value="1">ma</label>
+          <label class="chip"><input type="checkbox" value="2">di</label>
+          <label class="chip"><input type="checkbox" value="3">wo</label>
+          <label class="chip"><input type="checkbox" value="4">do</label>
+          <label class="chip"><input type="checkbox" value="5">vr</label>
+          <label class="chip"><input type="checkbox" value="6">za</label>
+          <label class="chip"><input type="checkbox" value="0">zo</label>
         </div>
+        <div style="height:14px"></div>
       </div>
       <div id="f-monthly" class="hidden"><label>Dag van de maand <input type="number" min="1" max="31" id="f-dom"></label></div>
-      <div class="row">
+      <div class="row2">
         <label>Vanaf (optioneel) <input type="date" id="f-start"></label>
         <label>Tot en met (optioneel) <input type="date" id="f-end"></label>
       </div>
-      <div class="actions">
-        <button class="btn primary" id="f-save">Opslaan</button>
-        <button class="btn" id="f-cancel">Leegmaken</button>
+      <div class="status" id="f-status" role="status"></div>
+      <div class="sheet-foot">
+        <button class="btn" type="button" id="f-cancel">Annuleren</button>
+        <button class="btn primary" type="submit" id="f-save">Opslaan</button>
       </div>
-      <div class="status" id="f-status"></div>
-    </section>
+    </div>
+  </form>
+</dialog>
 
-    <section class="card">
-      <h3>Alle taken <span class="muted" id="count"></span></h3>
-      <div id="f-list"></div>
-      <div class="actions" style="margin-top:12px">
-        <button class="btn danger" id="wipe">Wis alle taken</button>
-      </div>
-    </section>
-  </div>
-</div>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
-/* ---------- Opslag: zelfde Firebase-database als het schoonmaakrooster, eigen pad ---------- */
+/* ============ Opslag: zelfde Firebase-database als het schoonmaakrooster, eigen pad ============ */
 const DB = "https://schoonmaakrooster-27c5c-default-rtdb.europe-west1.firebasedatabase.app";
 const BASE = DB + "/weekplanner";
 
@@ -220,15 +299,22 @@ async function loadAll(){
     tasks = new Map(Object.entries(t || {}));
     doneSet = new Set(Object.keys(d || {}));
     loadedOnce = true;
-    setSync("Bijgewerkt " + new Date().toLocaleTimeString("nl", {hour:"2-digit", minute:"2-digit"}));
+    setSync("Bijgewerkt om " + new Date().toLocaleTimeString("nl", {hour:"2-digit", minute:"2-digit"}));
   }catch(e){
-    setSync("Geen verbinding: " + e.message);
+    setSync("Geen verbinding. Tik op ↻ om opnieuw te proberen.");
   }
   render();
 }
-function setSync(text){ document.getElementById("sync").textContent = text; }
 
-/* ---------- Datum-hulpfuncties ---------- */
+/* ============ Datum- en hulpfuncties ============ */
+const $ = id => document.getElementById(id);
+const DOW_SHORT = ["ma","di","wo","do","vr","za","zo"];
+const REC_LABEL = { daily:"dagelijks", weekly:"wekelijks", monthly:"maandelijks" };
+const DAY_NAMES = ["zo","ma","di","wo","do","vr","za"];
+let view = "day";
+let cur = new Date();
+let filterText = "";
+
 function fmt(d){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
@@ -248,14 +334,21 @@ function isoWeek(d){
   const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
   return Math.ceil(((t - y0) / 86400000 + 1) / 7);
 }
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+function ring(pct, size){
+  const r = (size - 10) / 2, c = 2 * Math.PI * r, off = c * (1 - pct / 100), h = size / 2;
+  return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+    <circle cx="${h}" cy="${h}" r="${r}" class="ring-bg" stroke-width="8" fill="none"/>
+    <circle cx="${h}" cy="${h}" r="${r}" class="ring-fg" stroke-width="8" fill="none" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 ${h} ${h})"/>
+    <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" class="ring-txt" style="font-size:${Math.round(size*0.22)}px">${pct}%</text>
+  </svg>`;
+}
 
-/* ---------- Taken per dag ---------- */
-const REC_LABEL = { daily:"↻ dagelijks", weekly:"↻ wekelijks", monthly:"↻ maandelijks" };
-const DAY_NAMES = ["zo","ma","di","wo","do","vr","za"];
-
+/* ============ Taken per dag ============ */
 function occurs(t, ds){
   if (t.type === "none") return t.date === ds;
   if (t.startDate && ds < t.startDate) return false;
@@ -282,118 +375,165 @@ function stats(ds){
   return { n: list.length, d, pct: list.length ? Math.round(d/list.length*100) : 0 };
 }
 
-/* ---------- Schrijven: per taak/afvinking één kleine PUT of DELETE ---------- */
+/* ============ Afvinken: één kleine PUT of DELETE per wijziging ============ */
 async function toggle(id, ds){
   const key = doneKey(id, ds);
-  // optimistisch bijwerken, daarna opslaan en opnieuw laden
   if (doneSet.has(key)) doneSet.delete(key); else doneSet.add(key);
   render();
   try{
     if (doneSet.has(key)) await dbPut(`done/${key}`, true);
     else await dbDelete(`done/${key}`);
-    setSync("Opgeslagen " + new Date().toLocaleTimeString("nl", {hour:"2-digit", minute:"2-digit"}));
-  }catch(e){ setSync("Fout bij opslaan: " + e.message); await loadAll(); }
+    setSync("Bijgewerkt om " + new Date().toLocaleTimeString("nl", {hour:"2-digit", minute:"2-digit"}));
+  }catch(e){
+    toast("Opslaan mislukt. Opnieuw proberen.", true);
+    await loadAll();
+  }
 }
 
-/* ---------- Presentatie ---------- */
-let cur = new Date();
-let view = "day";
-const root = document.getElementById("root");
-const f = id => document.getElementById(id);
-
-function progressHtml(s){
-  return `<div class="progress">
-    <div class="bar"><span style="width:${s.pct}%"></span></div>
-    <span class="pct">${s.pct}%</span>
-  </div>
-  <div class="muted">${s.d} van ${s.n} gereed</div>`;
-}
-function taskHtml(t, ds){
-  const checked = isDone(t.id, ds);
+/* ============ Presentatie ============ */
+function rowHtml(t, ds){
+  const done = isDone(t.id, ds);
   const meta = [t.time, t.category, REC_LABEL[t.type]].filter(Boolean).map(esc).join(" · ");
-  return `<label class="task ${checked ? "done" : ""}">
-    <input type="checkbox" data-id="${esc(t.id)}" data-date="${ds}" ${checked ? "checked" : ""}>
-    <span class="body">
-      <span class="title">${esc(t.title)}</span>
-      ${meta ? `<span class="meta">${meta}</span>` : ""}
-    </span>
-  </label>`;
+  const label = `${t.title}, ${done ? "gereed" : "nog te doen"}`;
+  return `<li class="row ${done ? "is-done" : ""}">
+    <button class="check" data-toggle="${esc(t.id)}" data-date="${ds}" aria-pressed="${done}" aria-label="${esc(label)}">${done ? "✓" : ""}</button>
+    <button class="row-main" data-toggle="${esc(t.id)}" data-date="${ds}" aria-pressed="${done}">
+      <span class="row-title">${esc(t.title)}</span>
+      ${meta ? `<span class="row-meta">${meta}</span>` : ""}
+    </button>
+  </li>`;
 }
-function listHtml(ds){
+function dayList(ds){
   const list = tasksFor(ds);
-  if (!list.length) return `<p class="muted">Geen taken.</p>`;
-  return list.map(t => taskHtml(t, ds)).join("");
+  if (!list.length){
+    return `<div class="empty">
+      <span>Niets gepland op deze dag.</span>
+      <button class="btn primary small" data-add="${ds}">+ Taak toevoegen</button>
+    </div>`;
+  }
+  const open = list.filter(t => !isDone(t.id, ds));
+  const done = list.filter(t => isDone(t.id, ds));
+  let html = "";
+  if (open.length) html += `<p class="grp">Nog te doen · ${open.length}</p><ul class="tasks">${open.map(t => rowHtml(t, ds)).join("")}</ul>`;
+  if (done.length) html += `<p class="grp">Gereed · ${done.length}</p><ul class="tasks">${done.map(t => rowHtml(t, ds)).join("")}</ul>`;
+  return html;
 }
-function weekLabel(d){ return `week ${isoWeek(d)}`; }
+function dayHero(ds, title){
+  const s = stats(ds);
+  const msg = s.n === 0 ? "Geen taken gepland"
+    : s.d === s.n ? "Alles gereed, goed gedaan"
+    : `Nog ${s.n - s.d} te doen`;
+  return `<section class="card hero">
+    <div style="min-width:0">
+      <p class="muted" style="margin:0">${esc(title)}</p>
+      <p class="big">${s.d}<small> van ${s.n}</small></p>
+      <p class="muted">${msg}</p>
+    </div>
+    ${ring(s.pct, 88)}
+  </section>`;
+}
 
 function renderDay(){
   const ds = fmt(cur);
-  f("label").textContent = `${cur.toLocaleDateString("nl-NL",{weekday:"long", day:"numeric", month:"long", year:"numeric"})} · ${weekLabel(cur)}`;
-  return `<section class="card">${progressHtml(stats(ds))}${listHtml(ds)}</section>`;
+  $("label").textContent = cur.toLocaleDateString("nl-NL", {weekday:"long", day:"numeric", month:"long"});
+  return dayHero(ds, "Voortgang") + dayList(ds);
 }
+
 function renderWeek(){
   const start = monday(cur);
-  const end = new Date(start); end.setDate(start.getDate()+6);
-  f("label").textContent = `${weekLabel(cur)} · ${start.toLocaleDateString("nl-NL",{day:"numeric",month:"short"})} – ${end.toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"})}`;
-  let n = 0, d = 0, days = "";
-  for (let i=0; i<7; i++){
-    const day = new Date(start); day.setDate(start.getDate()+i);
+  const end = new Date(start); end.setDate(start.getDate() + 6);
+  $("label").textContent = `week ${isoWeek(cur)} · ${start.toLocaleDateString("nl-NL",{day:"numeric",month:"short"})} – ${end.toLocaleDateString("nl-NL",{day:"numeric",month:"short"})}`;
+
+  const sel = fmt(cur), todayDs = fmt(new Date());
+  let strip = `<div class="strip">`;
+  let n = 0, d = 0;
+  for (let i = 0; i < 7; i++){
+    const day = new Date(start); day.setDate(start.getDate() + i);
     const ds = fmt(day);
     const s = stats(ds);
     n += s.n; d += s.d;
-    const name = day.toLocaleDateString("nl-NL", {weekday:"long", day:"numeric", month:"short"});
-    days += `<section class="card">
-      <h3><button class="link" data-goto="${ds}">${name}</button><span class="pct">${s.pct}%</span></h3>
-      ${progressHtml(s)}
-      ${listHtml(ds)}
-    </section>`;
+    const cls = [ds === sel ? "sel" : "", ds === todayDs ? "today" : ""].join(" ");
+    strip += `<button class="wday ${cls}" data-goto="${ds}" aria-label="${DOW_SHORT[day.getDay()]} ${day.getDate()}, ${s.d} van ${s.n} gereed">
+      <span class="wd">${DOW_SHORT[(day.getDay()+6)%7]}</span>
+      <span class="wn">${day.getDate()}</span>
+      <span class="bar2">${s.n ? `<span style="width:${s.pct}%"></span>` : ""}</span>
+    </button>`;
   }
+  strip += `</div>`;
   const wpct = n ? Math.round(d/n*100) : 0;
-  return `<section class="card"><h3>Week totaal</h3>${progressHtml({n,d,pct:wpct})}</section>` + days;
+  return strip
+    + `<section class="card hero"><div style="min-width:0"><p class="muted" style="margin:0">Week totaal</p><p class="big">${d}<small> van ${n}</small></p><p class="muted">${n ? "gereed deze week" : "Geen taken deze week"}</p></div>${ring(wpct, 72)}</section>`
+    + dayList(sel);
 }
 
-/* ---------- Maandoverzicht (één of meerdere maanden onder elkaar) ---------- */
 function renderMonth(){
-  const count = Number(f("monthCount").value) || 1;
-  const todayDs = fmt(new Date());
+  const count = Number($("monthCount").value) || 1;
+  const todayDs = fmt(new Date()), sel = fmt(cur);
   const first = new Date(cur.getFullYear(), cur.getMonth(), 1);
   const lastM = new Date(cur.getFullYear(), cur.getMonth() + count - 1, 1);
-  f("label").textContent = count === 1
+  $("label").textContent = count === 1
     ? first.toLocaleDateString("nl-NL", {month:"long", year:"numeric"})
     : `${first.toLocaleDateString("nl-NL", {month:"short", year:"numeric"})} – ${lastM.toLocaleDateString("nl-NL", {month:"short", year:"numeric"})}`;
 
-  const dows = ["ma","di","wo","do","vr","za","zo"].map(d => `<div class="dow">${d}</div>`).join("");
+  const dows = DOW_SHORT.map(d => `<div class="dow">${d}</div>`).join("");
   let html = "";
   for (let m = 0; m < count; m++){
     const mStart = new Date(first.getFullYear(), first.getMonth() + m, 1);
     const daysInMonth = new Date(mStart.getFullYear(), mStart.getMonth() + 1, 0).getDate();
     const offset = (mStart.getDay() + 6) % 7;
     let n = 0, d = 0, cells = "";
-    for (let i = 0; i < offset; i++) cells += `<div></div>`;
+    for (let i = 0; i < offset; i++) cells += `<div aria-hidden="true"></div>`;
     for (let day = 1; day <= daysInMonth; day++){
       const ds = fmt(new Date(mStart.getFullYear(), mStart.getMonth(), day));
       const s = stats(ds);
       n += s.n; d += s.d;
-      cells += `<button class="cday${ds === todayDs ? " today" : ""}" data-goto="${ds}" aria-label="${ds}">
+      const cls = [ds === todayDs ? "today" : "", ds === sel ? "sel" : ""].join(" ");
+      cells += `<button class="cday ${cls}" data-goto="${ds}" aria-label="${day}, ${s.d} van ${s.n} gereed">
         <span class="num">${day}</span>
         <span class="bar2">${s.n ? `<span style="width:${s.pct}%"></span>` : ""}</span>
         <span class="cnt">${s.n ? `${s.d}/${s.n}` : ""}</span>
       </button>`;
     }
-    const pct = n ? Math.round(d / n * 100) : 0;
+    const pct = n ? Math.round(d/n*100) : 0;
     const title = mStart.toLocaleDateString("nl-NL", {month:"long", year:"numeric"});
     html += `<section class="card">
-      <h3><span style="text-transform:capitalize">${title}</span><span class="pct">${pct}%</span></h3>
-      <div class="muted" style="margin-bottom:8px">${d} van ${n} gereed</div>
+      <div class="mhead"><h3>${title}</h3><span class="pct">${pct}%</span></div>
       <div class="cal">${dows}${cells}</div>
     </section>`;
   }
-  return html;
+  const selLong = cur.toLocaleDateString("nl-NL", {weekday:"long", day:"numeric", month:"long"});
+  return html + `<h3 class="sel-h">${esc(selLong)}</h3>` + dayList(sel);
 }
 
-/* ---------- Invoer ---------- */
-let editingId = null;
-
+function taskItemHtml(t){
+  return `<div class="item">
+    <div class="body">
+      <span style="font-weight:700">${esc(t.title)}</span>
+      <span class="meta">${esc(describe(t))}</span>
+    </div>
+    <div class="acts">
+      <button class="btn small" data-edit="${esc(t.id)}">Bewerk</button>
+      <button class="btn small danger" data-del="${esc(t.id)}">Verwijder</button>
+    </div>
+  </div>`;
+}
+function tasksListHtml(){
+  const q = filterText.trim().toLowerCase();
+  const list = allTasks()
+    .filter(t => !q || (t.title + " " + (t.category || "")).toLowerCase().includes(q))
+    .sort((a,b) => a.title.localeCompare(b.title));
+  if (!list.length) return `<div class="empty"><span>${q ? "Geen taken gevonden." : "Nog geen taken."}</span></div>`;
+  return `<div class="tasks">${list.map(taskItemHtml).join("")}</div>`;
+}
+function renderTasks(){
+  const n = tasks.size;
+  $("label").textContent = `Alle taken (${n})`;
+  return `<input class="search" id="search" type="search" placeholder="Zoek op titel of categorie…" value="${esc(filterText)}" aria-label="Zoek taken">
+    <div id="tlist">${tasksListHtml()}</div>
+    <div class="toolrow" style="margin-top:22px">
+      <button class="btn danger small" id="wipe">Wis alle taken</button>
+    </div>`;
+}
 function describe(t){
   const range = [t.startDate && `vanaf ${t.startDate}`, t.endDate && `t/m ${t.endDate}`].filter(Boolean).join(", ");
   let s;
@@ -403,35 +543,77 @@ function describe(t){
   else s = `maandelijks op de ${t.dayOfMonth}e`;
   return [s, t.time, t.category, range].filter(Boolean).join(" · ");
 }
-function renderList(){
-  const list = allTasks();
-  f("count").textContent = `(${list.length})`;
-  const sorted = list.sort((a,b) => a.title.localeCompare(b.title));
-  f("f-list").innerHTML = sorted.length ? sorted.map(t => `
-    <div class="item">
-      <div class="body">
-        <span>${esc(t.title)}</span>
-        <span class="meta">${esc(describe(t))}</span>
-      </div>
-      <div class="acts">
-        <button class="btn small" data-edit="${esc(t.id)}">Bewerk</button>
-        <button class="btn small danger" data-del="${esc(t.id)}">Verwijder</button>
-      </div>
-    </div>`).join("") : `<p class="muted">Nog geen taken.</p>`;
+
+function render(){
+  const isMonth = view === "month", isTasks = view === "tasks";
+  const todayDs = fmt(new Date());
+
+  $("eyebrow").textContent = cap(new Date().toLocaleDateString("nl-NL", {weekday:"long", day:"numeric", month:"long"}));
+  $("hdrRing").innerHTML = ring(stats(todayDs).pct, 60);
+
+  [["tabDay","day"],["tabWeek","week"],["tabMonth","month"],["tabTasks","tasks"]].forEach(([id, v]) => {
+    $(id).setAttribute("aria-selected", String(view === v));
+  });
+  $("nav").classList.toggle("hidden", isTasks);
+  $("jump").classList.toggle("hidden", isMonth);
+  $("monthTools").classList.toggle("hidden", !isMonth);
+
+  if (!loadedOnce && !isTasks){
+    $("root").innerHTML = `<div class="empty"><span>Laden…</span></div>`;
+    $("label").textContent = "";
+    return;
+  }
+  if (isTasks){
+    $("root").innerHTML = renderTasks();
+  } else if (isMonth){
+    $("root").innerHTML = renderMonth();
+    $("jumpMonth").value = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,"0")}`;
+  } else {
+    $("root").innerHTML = view === "day" ? renderDay() : renderWeek();
+    $("jump").value = fmt(cur);
+  }
 }
-function syncType(){
-  const type = f("f-type").value;
-  f("f-none").classList.toggle("hidden", type !== "none");
-  f("f-weekly").classList.toggle("hidden", type !== "weekly");
-  f("f-monthly").classList.toggle("hidden", type !== "monthly");
+
+function step(dir){
+  if (view === "month"){
+    const n = Number($("monthCount").value) || 1;
+    cur = new Date(cur.getFullYear(), cur.getMonth() + dir * n, 1);
+  } else {
+    cur.setDate(cur.getDate() + dir * (view === "week" ? 7 : 1));
+  }
+  render();
 }
-function setStatus(msg, isErr){
-  const el = f("f-status");
-  el.textContent = msg;
-  el.classList.toggle("err", !!isErr);
+
+/* ============ Toast en bevestigingsknop ============ */
+let toastTimer = null;
+function toast(msg, isErr){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.toggle("err", !!isErr);
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2300);
 }
-/* Laatst gebruikte velden onthouden (per apparaat), behalve de titel */
+function setSync(text){ $("sync").textContent = text; }
+
+/* Eerste klik vraagt om bevestiging, tweede klik voert uit */
+function armed(btn, action){
+  if (btn.dataset.armed){
+    clearTimeout(btn._t);
+    delete btn.dataset.armed;
+    action();
+    return;
+  }
+  const original = btn.textContent;
+  btn.dataset.armed = "1";
+  btn.textContent = "Zeker weten?";
+  btn._t = setTimeout(() => { delete btn.dataset.armed; btn.textContent = original; }, 3000);
+}
+
+/* ============ Formulier (bottom sheet) ============ */
 const KEY_LAST = "weekplanner-last-form";
+let editingId = null;
+
 function readLast(){
   try{ return JSON.parse(localStorage.getItem(KEY_LAST) || "null"); }catch(e){ return null; }
 }
@@ -440,193 +622,192 @@ function writeLast(v){
 }
 function formValues(){
   return {
-    time: f("f-time").value,
-    cat: f("f-cat").value,
-    type: f("f-type").value,
-    date: f("f-date").value,
+    time: $("f-time").value,
+    cat: $("f-cat").value,
+    type: $("f-type").value,
+    date: $("f-date").value,
     days: [...document.querySelectorAll("#f-weekly input:checked")].map(c => Number(c.value)),
-    dom: f("f-dom").value,
-    start: f("f-start").value,
-    end: f("f-end").value
+    dom: $("f-dom").value,
+    start: $("f-start").value,
+    end: $("f-end").value
   };
 }
 function applyValues(v){
-  f("f-time").value = v.time || "";
-  f("f-cat").value = v.cat || "";
-  f("f-type").value = v.type || "none";
-  f("f-date").value = v.date || fmt(new Date());
-  f("f-dom").value = v.dom || "";
-  f("f-start").value = v.start || "";
-  f("f-end").value = v.end || "";
+  $("f-time").value = v.time || "";
+  $("f-cat").value = v.cat || "";
+  $("f-type").value = v.type || "none";
+  $("f-date").value = v.date || fmt(new Date());
+  $("f-dom").value = v.dom || "";
+  $("f-start").value = v.start || "";
+  $("f-end").value = v.end || "";
   document.querySelectorAll("#f-weekly input").forEach(c => c.checked = (v.days || []).includes(Number(c.value)));
 }
-function resetForm(){
-  editingId = null;
-  f("formTitle").textContent = "Nieuwe taak";
-  f("f-save").textContent = "Opslaan";
-  f("f-title").value = "";
-  applyValues(readLast() || {});
+function syncType(){
+  const type = $("f-type").value;
+  $("f-none").classList.toggle("hidden", type !== "none");
+  $("f-weekly").classList.toggle("hidden", type !== "weekly");
+  $("f-monthly").classList.toggle("hidden", type !== "monthly");
+}
+function setStatus(msg, isErr){
+  const el = $("f-status");
+  el.textContent = msg;
+  el.classList.toggle("err", !!isErr);
+}
+function openSheet(id = null, presetDate = null){
+  editingId = id;
+  const t = id ? tasks.get(id) : null;
+  $("sheetTitle").textContent = id ? "Taak bewerken" : "Nieuwe taak";
+  $("f-save").textContent = id ? "Wijzigen" : "Opslaan";
+  $("f-title").value = t ? t.title : "";
+  if (t){
+    applyValues({ time:t.time, cat:t.category, type:t.type, date:t.date, days:t.days, dom:t.dayOfMonth, start:t.startDate, end:t.endDate });
+  } else {
+    applyValues(readLast() || {});
+    if (presetDate) $("f-date").value = presetDate;
+  }
   syncType();
+  setStatus("");
+  $("sheet").showModal();
+  setTimeout(() => $("f-title").focus(), 60);
+}
+function closeSheet(){
+  $("sheet").close();
+  editingId = null;
 }
 async function saveForm(){
-  const title = f("f-title").value.trim();
+  const title = $("f-title").value.trim();
   if (!title) return setStatus("Vul een titel in.", true);
-  const type = f("f-type").value;
+  const type = $("f-type").value;
   const t = {
     title, type,
-    time: f("f-time").value,
-    category: f("f-cat").value.trim(),
-    startDate: f("f-start").value,
-    endDate: f("f-end").value
+    time: $("f-time").value,
+    category: $("f-cat").value.trim(),
+    startDate: $("f-start").value,
+    endDate: $("f-end").value
   };
   if (type === "none"){
-    if (!f("f-date").value) return setStatus("Kies een datum.", true);
-    t.date = f("f-date").value;
+    if (!$("f-date").value) return setStatus("Kies een datum.", true);
+    t.date = $("f-date").value;
   }
   if (type === "weekly"){
     t.days = [...document.querySelectorAll("#f-weekly input:checked")].map(c => Number(c.value));
     if (!t.days.length) return setStatus("Kies minstens één dag.", true);
   }
   if (type === "monthly"){
-    const n = Number(f("f-dom").value);
+    const n = Number($("f-dom").value);
     if (!(n >= 1 && n <= 31)) return setStatus("Vul een dag tussen 1 en 31 in.", true);
     t.dayOfMonth = n;
   }
   if (t.startDate && t.endDate && t.endDate < t.startDate)
-    return setStatus("Einddatum ligt voor de startdatum.", true);
+    return setStatus("De einddatum ligt vóór de startdatum.", true);
 
+  const last = formValues();
+  const isEdit = !!editingId;
   const id = editingId || (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+  $("f-save").disabled = true;
   try{
     await dbPut(`tasks/${id}`, t);
-    writeLast(formValues());
-    resetForm();
-    setStatus("Opgeslagen. Iedereen ziet dit bij het vernieuwen.");
+    writeLast(last);
+    closeSheet();
+    toast(isEdit ? "Taak gewijzigd" : "Taak opgeslagen");
     await loadAll();
-  }catch(e){ setStatus("Opslaan mislukt: " + e.message, true); }
-}
-function editTask(id){
-  const t = tasks.get(id);
-  if (!t) return;
-  editingId = id;
-  f("formTitle").textContent = "Taak bewerken";
-  f("f-save").textContent = "Wijzigen";
-  f("f-title").value = t.title;
-  f("f-time").value = t.time || "";
-  f("f-cat").value = t.category || "";
-  f("f-type").value = t.type;
-  f("f-date").value = t.date || fmt(new Date());
-  f("f-start").value = t.startDate || "";
-  f("f-end").value = t.endDate || "";
-  f("f-dom").value = t.dayOfMonth || "";
-  document.querySelectorAll("#f-weekly input").forEach(c => c.checked = (t.days||[]).includes(Number(c.value)));
-  syncType();
-  setStatus("");
-  window.scrollTo({top:0, behavior:"smooth"});
+  }catch(e){
+    setStatus("Opslaan mislukt. Controleer je verbinding.", true);
+  }finally{
+    $("f-save").disabled = false;
+  }
 }
 async function deleteTask(id){
   try{
     await dbDelete(`tasks/${id}`);
-    if (editingId === id) resetForm();
+    toast("Taak verwijderd");
     await loadAll();
-  }catch(e){ setStatus("Verwijderen mislukt: " + e.message, true); }
+  }catch(e){ toast("Verwijderen mislukt", true); }
 }
 
-/* ---------- Weergave ---------- */
-function render(){
-  const isInput = view === "input";
-  const isMonth = view === "month";
-  root.classList.toggle("hidden", isInput);
-  f("invoer").classList.toggle("hidden", !isInput);
-  f("nav").classList.toggle("hidden", isInput);
-  f("jump").classList.toggle("hidden", isMonth);
-  f("monthTools").classList.toggle("hidden", !isMonth);
-  if (isInput){
-    renderList();
-  } else if (isMonth){
-    root.innerHTML = renderMonth();
-    f("jumpMonth").value = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,"0")}`;
-  } else {
-    root.innerHTML = view === "day" ? renderDay() : renderWeek();
-    f("jump").value = fmt(cur);
-  }
-  f("tabDay").classList.toggle("active", view === "day");
-  f("tabWeek").classList.toggle("active", view === "week");
-  f("tabMonth").classList.toggle("active", isMonth);
-  f("tabInput").classList.toggle("active", isInput);
-}
-function step(dir){
-  if (view === "month"){
-    const n = Number(f("monthCount").value) || 1;
-    cur = new Date(cur.getFullYear(), cur.getMonth() + dir * n, 1);
-  } else {
-    cur.setDate(cur.getDate() + dir * (view === "week" ? 7 : 1));
-  }
-  render();
-}
-
-/* ---------- Events ---------- */
-root.addEventListener("change", e => {
-  const cb = e.target;
-  if (cb.matches("input[data-id]")) toggle(cb.dataset.id, cb.dataset.date);
+/* ============ Navigatie en events ============ */
+document.querySelectorAll(".seg button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    view = btn.id.replace("tab", "").toLowerCase();
+    render();
+  });
 });
-root.addEventListener("click", e => {
-  const g = e.target.closest("[data-goto]");
-  if (g){ cur = parseDate(g.dataset.goto); view = "day"; render(); }
-});
-f("invoer").addEventListener("click", e => {
-  const ed = e.target.closest("[data-edit]");
-  const del = e.target.closest("[data-del]");
-  if (ed) editTask(ed.dataset.edit);
-  if (del) deleteTask(del.dataset.del);
-});
-
-f("prev").onclick = () => step(-1);
-f("next").onclick = () => step(1);
-f("today").onclick = () => { cur = new Date(); render(); };
-f("refresh").onclick = () => loadAll();
-f("jump").addEventListener("change", e => {
-  if (e.target.value){ cur = parseDate(e.target.value); render(); }
-});
-f("tabDay").onclick   = () => { view = "day";   render(); };
-f("tabWeek").onclick  = () => { view = "week";  render(); };
-f("tabInput").onclick = () => { view = "input"; render(); };
-f("tabMonth").onclick = () => { view = "month"; render(); };
-f("jumpMonth").addEventListener("change", e => {
+$("prev").onclick = () => step(-1);
+$("next").onclick = () => step(1);
+$("today").onclick = () => { cur = new Date(); render(); };
+$("jump").addEventListener("change", e => { if (e.target.value){ cur = parseDate(e.target.value); render(); } });
+$("jumpMonth").addEventListener("change", e => {
   if (e.target.value){
     const [y, m] = e.target.value.split("-").map(Number);
     cur = new Date(y, m - 1, 1);
     render();
   }
 });
-f("monthCount").addEventListener("change", render);
+$("monthCount").addEventListener("change", render);
+$("fab").onclick = () => openSheet(null, fmt(cur));
 
-let wipeArmed = false;
-f("wipe").onclick = async () => {
-  if (!wipeArmed){
-    wipeArmed = true;
-    f("wipe").textContent = "Klik nogmaals om alles te wissen";
-    setTimeout(() => { wipeArmed = false; f("wipe").textContent = "Wis alle taken"; }, 4000);
-    return;
+$("taskForm").addEventListener("submit", e => { e.preventDefault(); saveForm(); });
+$("f-cancel").onclick = closeSheet;
+$("sheetClose").onclick = closeSheet;
+$("f-type").addEventListener("change", syncType);
+$("sheet").addEventListener("click", e => { if (e.target === e.currentTarget) closeSheet(); });
+
+const root = $("root");
+root.addEventListener("click", async e => {
+  const toggleBtn = e.target.closest("[data-toggle]");
+  if (toggleBtn) return toggle(toggleBtn.dataset.toggle, toggleBtn.dataset.date);
+
+  const goto = e.target.closest("[data-goto]");
+  if (goto){ cur = parseDate(goto.dataset.goto); render(); return; }
+
+  const add = e.target.closest("[data-add]");
+  if (add) return openSheet(null, add.dataset.add);
+
+  const edit = e.target.closest("[data-edit]");
+  if (edit) return openSheet(edit.dataset.edit);
+
+  const del = e.target.closest("[data-del]");
+  if (del) return armed(del, () => deleteTask(del.dataset.del));
+
+  const wipe = e.target.closest("#wipe");
+  if (wipe) return armed(wipe, async () => {
+    try{
+      await dbDelete("tasks");
+      await dbDelete("done");
+      toast("Alle taken gewist");
+      await loadAll();
+    }catch(err){ toast("Wissen mislukt", true); }
+  });
+});
+root.addEventListener("input", e => {
+  if (e.target.id === "search"){
+    filterText = e.target.value;
+    $("tlist").innerHTML = tasksListHtml();
   }
-  wipeArmed = false;
-  f("wipe").textContent = "Wis alle taken";
-  try{
-    await dbDelete("tasks");
-    await dbDelete("done");
-    resetForm();
-    setStatus("Alle taken gewist.");
-    await loadAll();
-  }catch(e){ setStatus("Wissen mislukt: " + e.message, true); }
-};
+});
 
-f("f-type").addEventListener("change", syncType);
-f("f-save").onclick = saveForm;
-f("f-cancel").onclick = () => { resetForm(); setStatus(""); };
+/* Vegen links/rechts om dag of week te wisselen */
+let touchX = null, touchY = null;
+root.addEventListener("touchstart", e => {
+  touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+}, {passive:true});
+root.addEventListener("touchend", e => {
+  if (touchX === null || (view !== "day" && view !== "week")) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  const dy = e.changedTouches[0].clientY - touchY;
+  touchX = null;
+  if (Math.abs(dx) > 70 && Math.abs(dy) < 50) step(dx < 0 ? 1 : -1);
+});
 
-resetForm();
+$("refresh").onclick = () => loadAll();
+$("hdrRing").onclick = () => loadAll();
+
 render();
 loadAll();
-setInterval(() => { if (!document.hidden) loadAll(); }, 30000);
+setInterval(() => {
+  const typing = ["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName);
+  if (!document.hidden && !$("sheet").open && !typing) loadAll();
+}, 30000);
 </script>
 </body>
 </html>
